@@ -1,0 +1,21 @@
+---
+name: Tests
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  test:
+    name: Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Make scripts executable
+        run: chmod +x ./src/log-archive ./tests/test_archive.sh
+      - name: Run Tests
+        run: ./tests/test_archive.sh
