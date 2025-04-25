@@ -124,6 +124,10 @@ main() {
   # Test 2: Invalid log directory
   run_test "Invalid log directory" "$LOG_ARCHIVE_SCRIPT -a $ARCHIVE_DIR $LOG_DIR/nonexistent" 1
 
+  # Test 3: Save and use config
+  run_test "Save config" "$LOG_ARCHIVE_SCRIPT -a $ARCHIVE_DIR -c $CONFIG_FILE --save-config $LOG_DIR" 0
+  run_test "Use config" "$LOG_ARCHIVE_SCRIPT -c $CONFIG_FILE $LOG_DIR" 0
+
   cleanup
 
   echo -e "${BLUE}==== All Tests Completed ====${NC}"
