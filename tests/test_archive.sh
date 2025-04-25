@@ -131,6 +131,9 @@ main() {
   # Test 4: Exclusion pattern
   run_test "Exclusion pattern" "$LOG_ARCHIVE_SCRIPT -a $ARCHIVE_DIR -e '*.log' $LOG_DIR" 0
 
+  # Test 5: Invalid retention days
+  run_test "Invalid retention days" "$LOG_ARCHIVE_SCRIPT -a $ARCHIVE_DIR -r 0 $LOG_DIR" 1
+
   cleanup
 
   echo -e "${BLUE}==== All Tests Completed ====${NC}"
