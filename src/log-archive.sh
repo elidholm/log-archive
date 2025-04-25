@@ -160,6 +160,12 @@ validate_arguments() {
   fi
 }
 
+clean_old_archives() {
+  log_message "Cleaning up archives older than $RETENTION_DAYS days..."
+  find "$ARCHIVE_DIR" -name "logs_archive_*.tar.gz" -type f -mtime +"$RETENTION_DAYS" -delete
+  success "Cleanup completed"
+}
+
 archive_logs() {
   local log_dir="$1"
   local timestamp
@@ -193,6 +199,8 @@ EOF
   fi
 
   success "Archive created: $archive_file"
+
+  clean_old_archives
 }
 
 main() {
