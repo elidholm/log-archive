@@ -121,6 +121,9 @@ main() {
   run_test "Basic functionality" "$LOG_ARCHIVE_SCRIPT -a $ARCHIVE_DIR $LOG_DIR" 0
   verify_archive "$ARCHIVE_DIR"
 
+  # Test 2: Invalid log directory
+  run_test "Invalid log directory" "$LOG_ARCHIVE_SCRIPT -a $ARCHIVE_DIR $LOG_DIR/nonexistent" 1
+
   cleanup
 
   echo -e "${BLUE}==== All Tests Completed ====${NC}"
