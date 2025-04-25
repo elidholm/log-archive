@@ -4,6 +4,8 @@
 # Author: Edvin Lidholm
 # Date: 2025-04-25
 
+set -o pipefail
+
 # Colors for better readability
 GREEN='\033[0;32m'
 RED='\033[0;31m'
@@ -36,10 +38,79 @@ cleanup() {
   echo -e "${BLUE}Test environment cleaned up${NC}"
 }
 
+run_test() {
+  local test_name="$1"
+  local command="$2"
+  local expected_exit_code="$3"
+
+  echo -e "${BLUE}Running test: $test_name${NC}"
+
+  # Execute the command and capture exit code
+  eval "$command"
+  exit_code=$?
+
+  if [ "$exit_code" -eq "$expected_exit_code" ]; then
+    echo -e "${GREEN}✓ Test passed: ${test_name}${NC}"
+    return 0
+  else
+    echo -e "${RED}✗ Test failed: ${test_name}${NC}"
+    echo -e "${RED}  Expected exit code ${expected_exit_code}, got ${exit_code}${NC}"
+    return 1
+  fi
+}
+
+verify_archive() {
+  local archive_dir="$1"
+
+  # Check if archive directory exists
+  if [ ! -d "$archive_dir" ]; then
+    echo -e "${RED}Archive directory does not exist: $archive_dir${NC}"
+    return 1
+  fi
+
+  # Check if any archives were created
+  if [ -z "$(ls -A "$archive_dir" 2>/dev/null)" ]; then
+    echo -e "${RED}No archives found in $archive_dir${NC}"
+    return 1
+  fi
+
+  # Check for log file
+  if [ ! -f "$archive_dir/archive_log.aof" ]; then
+    echo -e "${RED}Archive log file not found${NC}"
+    return 1
+  fi
+
+  # Find the latest archive
+  latest_archive=$(find "$archive_dir" -name "logs_archive_*.tar.gz" -type f -printf "%T@ %p\n" | sort -n | tail -1 | cut -d' ' -f2-)
+
+  # Check if archive exists
+  if [ -z "$latest_archive" ]; then
+    echo -e "${RED}No archive file found${NC}"
+    return 1
+  fi
+
+  # Verify archive contains files
+  if ! tar -tzf "$latest_archive" > /dev/null 2>&1; then
+    echo -e "${RED}Invalid archive format: $latest_archive${NC}"
+    return 1
+  fi
+
+  echo -e "${GREEN}✓ Archive successfully created and verified: $latest_archive${NC}"
+  return 0
+}
+
 main() {
   echo -e "${BLUE}==== Starting Log Archive Tool Tests ====${NC}"
 
   setup_test_env
+
+  DIR=$(dirname "$0")
+  LOG_ARCHIVE_SCRIPT="${DIR}/../src/log-archive"
+  chmod +x "$LOG_ARCHIVE_SCRIPT"
+
+  # Test 1: Basic functionality
+  run_test "Basic functionality" "$LOG_ARCHIVE_SCRIPT -a $ARCHIVE_DIR $LOG_DIR" 0
+  verify_archive "$ARCHIVE_DIR"
 
   cleanup
 
