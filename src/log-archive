@@ -25,10 +25,9 @@ Usage: ${0##*/} [OPTIONS] <log-directory>
 Options:
   -h, --help            Show this help message and exit
   -a DIR                Directory to store archives (default: ${DEFAULT_ARCHIVE_DIR})
-  -c LEVEL              Compression level (1-9, default: 6)
   -r DAYS               Number of days to keep local archives (default: 30)
   -e PATTERN            Exclude files matching pattern
-  -f FILE               Use custom config file (default: ${DEFAULT_CONFIG_FILE})
+  -c FILE               Use custom config file (default: ${DEFAULT_CONFIG_FILE})
   -s, --save-config     Save current configuration as default config
 
 Examples:
@@ -74,7 +73,6 @@ save_config() {
 # Log Archive Tool Configuration
 # Generated on $(date '+%Y-%m-%d %H:%M:%S')
 ARCHIVE_DIR="$ARCHIVE_DIR"
-COMPRESSION_LEVEL="$COMPRESSION_LEVEL"
 RETENTION_DAYS="$RETENTION_DAYS"
 EXCLUDE_PATTERN="$EXCLUDE_PATTERN"
 EOF
@@ -85,14 +83,13 @@ EOF
 initialize_defaults() {
   ARCHIVE_DIR="$DEFAULT_ARCHIVE_DIR"
   CONFIG_FILE="$DEFAULT_CONFIG_FILE"
-  COMPRESSION_LEVEL=6
   RETENTION_DAYS=30
   EXCLUDE_PATTERN=""
   SAVE_CONFIG=false
 }
 
 parse_arguments() {
-  OPTSTRING=":ha:c:r:e:f:-:s"
+  OPTSTRING=":ha:c:r:e:-:s"
   while getopts ${OPTSTRING} opt; do
     case ${opt} in
       h)
@@ -102,16 +99,13 @@ parse_arguments() {
         ARCHIVE_DIR="${OPTARG}"
         ;;
       c)
-        COMPRESSION_LEVEL="${OPTARG}"
+        CONFIG_FILE="${OPTARG}"
         ;;
       r)
         RETENTION_DAYS="${OPTARG}"
         ;;
       e)
         EXCLUDE_PATTERN="${OPTARG}"
-        ;;
-      f)
-        CONFIG_FILE="${OPTARG}"
         ;;
       s)
         SAVE_CONFIG=true
@@ -149,10 +143,6 @@ validate_arguments() {
 
   if [ ! -d "$LOG_DIR" ]; then
     error "Log directory does not exist: $LOG_DIR"
-  fi
-
-  if [ "$COMPRESSION_LEVEL" -lt 1 ] || [ "$COMPRESSION_LEVEL" -gt 9 ]; then
-    error "Invalid compression level: $COMPRESSION_LEVEL. Must be between 1 and 9."
   fi
 
   if [ "$RETENTION_DAYS" -lt 1 ]; then
