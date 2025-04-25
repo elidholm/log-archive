@@ -1,0 +1,9 @@
+# Test archives
+*.tar.gz
+
+# Temporary files
+*.tmp
+
+# User-specific IDE files
+.vscode/
+*.sublime-*
