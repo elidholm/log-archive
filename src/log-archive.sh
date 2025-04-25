@@ -4,7 +4,7 @@
 # Author: Edvin Lidholm
 # Date: 2025-04-25
 
-set -euo pipefail
+set -eo pipefail
 
 # Default values
 DEFAULT_CONFIG_FILE="${XDG_CONFIG_HOME:-${HOME}/.config}/log-archive.conf"
@@ -23,17 +23,17 @@ print_usage() {
 Usage: ${0##*/} [OPTIONS] <log-directory>
 
 Options:
-  -h, --help                    Show this help message and exit
-  -a, --archive-dir DIR         Directory to store archives (default: ${DEFAULT_ARCHIVE_DIR})
-  -c, --compress-level LEVEL    Compression level (1-9, default: 6)
-  --retention DAYS              Number of days to keep local archives (default: 30)
-  --exclude PATTERN             Exclude files matching pattern
-  --config FILE                 Use custom config file (default: ${DEFAULT_CONFIG_FILE})
-  --save-config                 Save current configuration as default config
+  -h, --help            Show this help message and exit
+  -a DIR                Directory to store archives (default: ${DEFAULT_ARCHIVE_DIR})
+  -c LEVEL              Compression level (1-9, default: 6)
+  -r DAYS               Number of days to keep local archives (default: 30)
+  -e PATTERN            Exclude files matching pattern
+  -f FILE               Use custom config file (default: ${DEFAULT_CONFIG_FILE})
+  -s, --save-config     Save current configuration as default config
 
 Examples:
   ${0##*/} -a /backup/logs /var/log
-  ${0##*/} --retention 60 /var/log
+  ${0##*/} -r 60 /var/log
 
 EOF
 }
@@ -91,12 +91,82 @@ initialize_defaults() {
   SAVE_CONFIG=false
 }
 
+parse_arguments() {
+  OPTSTRING=":ha:c:r:e:f:-:s"
+  while getopts ${OPTSTRING} opt; do
+    case ${opt} in
+      h)
+        print_help
+        ;;
+      a)
+        ARCHIVE_DIR="${OPTARG}"
+        ;;
+      c)
+        COMPRESSION_LEVEL="${OPTARG}"
+        ;;
+      r)
+        RETENTION_DAYS="${OPTARG}"
+        ;;
+      e)
+        EXCLUDE_PATTERN="${OPTARG}"
+        ;;
+      f)
+        CONFIG_FILE="${OPTARG}"
+        ;;
+      s)
+        SAVE_CONFIG=true
+        ;;
+      -)
+        case "${OPTARG}" in
+          help)
+            print_help
+            ;;
+          save-config)
+            SAVE_CONFIG=true
+            ;;
+          *)
+            error "Invalid option: --${OPTARG}"
+            ;;
+        esac
+        ;;
+      :)
+        error "Option -${OPTARG} requires an argument."
+        ;;
+      \?)
+        error "Invalid option: -${OPTARG}"
+        ;;
+    esac
+  done
+  shift $((OPTIND - 1))
+
+  LOG_DIR="$1"
+}
+
+validate_arguments() {
+  if [ -z "$LOG_DIR" ]; then
+    error "Log directory not specified. Use '${0##*/} --help' for usage information."
+  fi
+
+  if [ ! -d "$LOG_DIR" ]; then
+    error "Log directory does not exist: $LOG_DIR"
+  fi
+
+  if [ "$COMPRESSION_LEVEL" -lt 1 ] || [ "$COMPRESSION_LEVEL" -gt 9 ]; then
+    error "Invalid compression level: $COMPRESSION_LEVEL. Must be between 1 and 9."
+  fi
+
+  if [ "$RETENTION_DAYS" -lt 1 ]; then
+    error "Invalid retention days: $RETENTION_DAYS. Must be at least 1."
+  fi
+}
+
 # Main execution
 main() {
   initialize_defaults
   load_config
+  parse_arguments "$@"
+  validate_arguments
 
-  SAVE_CONFIG=true
   if [ "$SAVE_CONFIG" = true ]; then
     save_config
   fi
