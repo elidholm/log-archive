@@ -160,7 +160,37 @@ validate_arguments() {
   fi
 }
 
-# Main execution
+archive_logs() {
+  local log_dir="$1"
+  local timestamp
+  timestamp=$(date '+%Y%m%d_%H%M%S')
+  local archive_file="$ARCHIVE_DIR/logs_archive_$timestamp.tar.gz"
+  local log_file="$ARCHIVE_DIR/archive_log.aof"
+
+  # Create archive directory if it doesn't exist
+  mkdir -p "$ARCHIVE_DIR"
+
+  # Check if the log file exists, if not create it
+  # and add a header
+  if [ ! -f "$log_file" ]; then
+    touch "$log_file"
+    cat > "$log_file" <<EOF
+# Log Archive Tool Archive log
+# Generated on $(date '+%Y-%m-%d %H:%M:%S')
+# This is an append-only file. Do not edit manually.
+
+EOF
+  fi
+
+  # Log the archiving process
+  log_message "Archiving logs from $log_dir to $archive_file"
+  echo "$(date '+%Y-%m-%d %H:%M:%S') - Archived $log_dir to $archive_file" >> "$log_file"
+
+  tar -czf "$archive_file" -C "$(dirname "$log_dir")" "$(basename "$log_dir")"
+
+  success "Archive created: $archive_file"
+}
+
 main() {
   initialize_defaults
   load_config
@@ -170,7 +200,8 @@ main() {
   if [ "$SAVE_CONFIG" = true ]; then
     save_config
   fi
+
+  archive_logs "$LOG_DIR"
 }
 
-# Run the script
 main "$@"
