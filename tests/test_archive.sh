@@ -128,6 +128,9 @@ main() {
   run_test "Save config" "$LOG_ARCHIVE_SCRIPT -a $ARCHIVE_DIR -c $CONFIG_FILE --save-config $LOG_DIR" 0
   run_test "Use config" "$LOG_ARCHIVE_SCRIPT -c $CONFIG_FILE $LOG_DIR" 0
 
+  # Test 4: Exclusion pattern
+  run_test "Exclusion pattern" "$LOG_ARCHIVE_SCRIPT -a $ARCHIVE_DIR -e '*.log' $LOG_DIR" 0
+
   cleanup
 
   echo -e "${BLUE}==== All Tests Completed ====${NC}"
