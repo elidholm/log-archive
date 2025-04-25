@@ -16,6 +16,7 @@ NC='\033[0m' # No Color
 TEST_DIR=$(mktemp -d)
 LOG_DIR="$TEST_DIR/logs"
 ARCHIVE_DIR="$TEST_DIR/archives"
+TEST_LOG="$TEST_DIR/test.log"
 CONFIG_FILE="$TEST_DIR/test.conf"
 
 # Create test logs directory with sample files
@@ -38,6 +39,12 @@ cleanup() {
   echo -e "${BLUE}Test environment cleaned up${NC}"
 }
 
+print_log() {
+  while IFS= read -r line; do
+    echo -e "  >\t${RED}$line${NC}"
+  done < "$TEST_LOG"
+}
+
 run_test() {
   local test_name="$1"
   local command="$2"
@@ -46,7 +53,7 @@ run_test() {
   echo -e "${BLUE}Running test: $test_name${NC}"
 
   # Execute the command and capture exit code
-  eval "$command"
+  eval "$command" > "$TEST_LOG" 2>&1
   exit_code=$?
 
   if [ "$exit_code" -eq "$expected_exit_code" ]; then
@@ -55,6 +62,8 @@ run_test() {
   else
     echo -e "${RED}✗ Test failed: ${test_name}${NC}"
     echo -e "${RED}  Expected exit code ${expected_exit_code}, got ${exit_code}${NC}"
+    echo -e "${RED}  Output from command:${NC}"
+    print_log
     return 1
   fi
 }
