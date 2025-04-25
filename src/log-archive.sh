@@ -61,3 +61,46 @@ error() {
   exit 1
 }
 
+load_config() {
+  if [[ -f "$CONFIG_FILE" ]]; then
+    # shellcheck source=/dev/null
+    . "$CONFIG_FILE"
+    log_message "Loaded configuration from $CONFIG_FILE"
+  fi
+}
+
+save_config() {
+  cat > "$CONFIG_FILE" <<EOF
+# Log Archive Tool Configuration
+# Generated on $(date '+%Y-%m-%d %H:%M:%S')
+ARCHIVE_DIR="$ARCHIVE_DIR"
+COMPRESSION_LEVEL="$COMPRESSION_LEVEL"
+RETENTION_DAYS="$RETENTION_DAYS"
+EXCLUDE_PATTERN="$EXCLUDE_PATTERN"
+EOF
+  chmod 600 "$CONFIG_FILE"
+  success "Saved configuration to $CONFIG_FILE"
+}
+
+initialize_defaults() {
+  ARCHIVE_DIR="$DEFAULT_ARCHIVE_DIR"
+  CONFIG_FILE="$DEFAULT_CONFIG_FILE"
+  COMPRESSION_LEVEL=6
+  RETENTION_DAYS=30
+  EXCLUDE_PATTERN=""
+  SAVE_CONFIG=false
+}
+
+# Main execution
+main() {
+  initialize_defaults
+  load_config
+
+  SAVE_CONFIG=true
+  if [ "$SAVE_CONFIG" = true ]; then
+    save_config
+  fi
+}
+
+# Run the script
+main "$@"
