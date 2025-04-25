@@ -31,10 +31,19 @@ setup_test_env() {
   echo "Apache log 2" > "$LOG_DIR/apache/error.log"
 }
 
+cleanup() {
+  rm -rf "$TEST_DIR"
+  echo -e "${BLUE}Test environment cleaned up${NC}"
+}
+
 main() {
   echo -e "${BLUE}==== Starting Log Archive Tool Tests ====${NC}"
 
   setup_test_env
+
+  cleanup
+
+  echo -e "${BLUE}==== All Tests Completed ====${NC}"
 }
 
 main
