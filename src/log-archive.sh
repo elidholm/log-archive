@@ -186,7 +186,11 @@ EOF
   log_message "Archiving logs from $log_dir to $archive_file"
   echo "$(date '+%Y-%m-%d %H:%M:%S') - Archived $log_dir to $archive_file" >> "$log_file"
 
-  tar -czf "$archive_file" -C "$(dirname "$log_dir")" "$(basename "$log_dir")"
+  if [ -n "$EXCLUDE_PATTERN" ]; then
+    tar --exclude="$EXCLUDE_PATTERN" -czf "$archive_file" -C "$(dirname "$log_dir")" "$(basename "$log_dir")"
+  else
+    tar -czf "$archive_file" -C "$(dirname "$log_dir")" "$(basename "$log_dir")"
+  fi
 
   success "Archive created: $archive_file"
 }
