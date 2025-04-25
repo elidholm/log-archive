@@ -134,6 +134,9 @@ main() {
   # Test 5: Invalid retention days
   run_test "Invalid retention days" "$LOG_ARCHIVE_SCRIPT -a $ARCHIVE_DIR -r 0 $LOG_DIR" 1
 
+  # Test 6: Help message
+  run_test "Help message" "$LOG_ARCHIVE_SCRIPT -h" 0
+
   cleanup
 
   echo -e "${BLUE}==== All Tests Completed ====${NC}"
